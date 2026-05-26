@@ -1,0 +1,54 @@
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+	--bg: #f8fafc;
+	--card: #ffffff;
+	--muted: #6b7280;
+	--text: #111827;
+}
+
+html.dark {
+	--bg: #0b1220;
+	--card: #071226;
+	--muted: #9ca3af;
+	--text: #e6eef8;
+}
+
+html, body, #root {
+	height: 100%;
+}
+
+body {
+		background-color: var(--bg);
+		color: var(--text);
+		-webkit-font-smoothing: antialiased;
+}
+
+/* Fallback system sans-serif so headings and text look styled
+	 even if Tailwind's base/preflight isn't injected for any reason. */
+html, body {
+	font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+h1, h2, h3 {
+	font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+	color: inherit;
+}
+
+.container-max {
+		max-width: 80rem;
+		margin-left: auto;
+		margin-right: auto;
+		padding-left: 1rem;
+		padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+	.container-max { padding-left: 1.5rem; padding-right: 1.5rem; }
+}
+@media (min-width: 1024px) {
+	.container-max { padding-left: 2rem; padding-right: 2rem; }
+}
