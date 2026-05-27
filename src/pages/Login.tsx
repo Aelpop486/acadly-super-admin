@@ -18,7 +18,7 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const { user, loading, login } = useAuth()
+  const { user, loading, authError, configNotice, login } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -40,14 +40,6 @@ const Login: React.FC = () => {
     } finally {
       setSubmitting(false)
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[color:var(--bg)]">
-        <div className="h-10 w-10 rounded-full border-2 border-indigo-200 border-t-indigo-600 animate-spin" />
-      </div>
-    )
   }
 
   if (user?.isSuperAdmin) {
@@ -91,14 +83,20 @@ const Login: React.FC = () => {
               <div className="mb-7">
                 <h2 className="text-2xl font-semibold">Sign in</h2>
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                  Use your Firebase admin account to continue.
+                  {loading ? 'Checking your current session...' : 'Use your Firebase admin account to continue.'}
                 </p>
               </div>
 
-              {error && (
+              {(authError || error) && (
                 <div className="mb-5 flex gap-3 rounded-md border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
                   <FiAlertCircle className="mt-0.5 shrink-0" />
-                  <span>{error}</span>
+                  <span>{authError || error}</span>
+                </div>
+              )}
+
+              {configNotice && !authError && !error && (
+                <div className="mb-5 rounded-md border border-indigo-200 bg-indigo-50 px-3 py-3 text-sm text-indigo-800 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-200">
+                  {configNotice}
                 </div>
               )}
 
@@ -106,7 +104,7 @@ const Login: React.FC = () => {
                 <label className="block">
                   <span className="text-sm font-medium">Email address</span>
                   <span className="mt-2 flex items-center rounded-md border border-gray-300 bg-white px-3 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 dark:border-[#263247] dark:bg-[#0b1220]">
-                    <FiMail className="mr-2 text-gray-400" />
+                    <FiMail className="me-2 text-gray-400" />
                     <input
                       type="email"
                       value={email}
@@ -121,7 +119,7 @@ const Login: React.FC = () => {
                 <label className="block">
                   <span className="text-sm font-medium">Password</span>
                   <span className="mt-2 flex items-center rounded-md border border-gray-300 bg-white px-3 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 dark:border-[#263247] dark:bg-[#0b1220]">
-                    <FiLock className="mr-2 text-gray-400" />
+                    <FiLock className="me-2 text-gray-400" />
                     <input
                       type="password"
                       value={password}
@@ -136,10 +134,10 @@ const Login: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={!!authError || loading || submitting}
                 className="mt-6 flex h-11 w-full items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {submitting ? 'Signing in...' : 'Sign in'}
+                {loading || submitting ? 'Please wait...' : 'Sign in'}
               </button>
             </form>
           </div>

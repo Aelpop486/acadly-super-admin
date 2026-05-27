@@ -4,7 +4,11 @@ import { FiSun, FiMoon } from 'react-icons/fi'
 const ThemeToggle: React.FC = () => {
   const [dark, setDark] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('theme') === 'dark'
+      const storedTheme = localStorage.getItem('theme')
+
+      if (storedTheme) return storedTheme === 'dark'
+
+      return window.matchMedia('(prefers-color-scheme: dark)').matches
     } catch {
       return false
     }
@@ -14,10 +18,16 @@ const ThemeToggle: React.FC = () => {
     const root = document.documentElement
     if (dark) {
       root.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
+      root.style.colorScheme = 'dark'
     } else {
       root.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
+      root.style.colorScheme = 'light'
+    }
+
+    try {
+      localStorage.setItem('theme', dark ? 'dark' : 'light')
+    } catch {
+      // Ignore storage failures so the toggle still works for the current session.
     }
   }, [dark])
 

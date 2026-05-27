@@ -8,10 +8,10 @@ const DashboardLayout: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <div className="min-h-screen flex bg-[color:var(--bg)] text-gray-900 dark:text-gray-100">
+    <div className="min-h-screen flex bg-slate-50 text-gray-900 dark:bg-slate-900 dark:text-gray-100">
       <Sidebar />
 
-      <div className="flex-1 flex flex-col md:pl-64">
+      <div className="flex-1 flex flex-col md:ps-64">
         <TopNav onOpenMobile={() => setMobileOpen(true)} />
 
         <main className="flex-1 container-max py-6">

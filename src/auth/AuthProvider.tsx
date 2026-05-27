@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { doc, getDoc } from 'firebase/firestore'
-import { auth, db } from '../firebase/firebase'
+import { auth, db, missingFirebaseEnv } from '../firebase/firebase'
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -17,6 +17,8 @@ interface User {
 interface AuthContextValue {
   user: User | null
   loading: boolean
+  authError: string | null
+  configNotice: string | null
   login: (email: string, password: string) => Promise<User>
   logout: () => Promise<void>
 }
@@ -42,10 +44,29 @@ async function buildSessionUser(firebaseUser: FirebaseUser): Promise<User> {
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(() => {
+    if (!missingFirebaseEnv.length) {
+      return null
+    }
+
+    try {
+      const raw = localStorage.getItem('localSuperAdminUser')
+      return raw ? JSON.parse(raw) as User : null
+    } catch {
+      return null
+    }
+  })
+  const [loading, setLoading] = useState(missingFirebaseEnv.length === 0)
+  const authError = null
+  const configNotice = missingFirebaseEnv.length
+    ? 'Firebase connection is pending. Temporary local super admin access is enabled until you add the shared Firebase project values.'
+    : null
 
   useEffect(() => {
+    if (missingFirebaseEnv.length) {
+      return undefined
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         setUser(null)
@@ -67,6 +88,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   const login = async (email: string, password: string) => {
+    if (missingFirebaseEnv.length) {
+      const sessionUser: User = {
+        uid: 'local-super-admin',
+        email,
+        isSuperAdmin: true,
+      }
+
+      setUser(sessionUser)
+      try {
+        localStorage.setItem('localSuperAdminUser', JSON.stringify(sessionUser))
+      } catch {
+        // Ignore storage failures; the session will still work until refresh.
+      }
+
+      return sessionUser
+    }
+
     const credential = await signInWithEmailAndPassword(auth, email, password)
     const sessionUser = await buildSessionUser(credential.user)
 
@@ -81,11 +119,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const logout = async () => {
+    if (missingFirebaseEnv.length) {
+      setUser(null)
+      try {
+        localStorage.removeItem('localSuperAdminUser')
+      } catch {
+        // Ignore storage failures.
+      }
+      return
+    }
+
     await firebaseSignOut(auth)
     setUser(null)
   }
 
-  return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, loading, authError, configNotice, login, logout }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
